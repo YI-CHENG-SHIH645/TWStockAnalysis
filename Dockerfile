@@ -1,6 +1,6 @@
 FROM python:3
 
-WORKDIR /usr/src/FinTech_2020
+WORKDIR /usr/src/twstock_analysis
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
