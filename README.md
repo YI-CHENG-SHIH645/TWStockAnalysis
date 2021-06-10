@@ -1,2 +1,3 @@
-"# FinTech_2020" 
+```sh
 sudo docker build . -t twstock_analysis
+```
