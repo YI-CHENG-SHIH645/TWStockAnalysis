@@ -17,7 +17,7 @@ def plot_return(daily_ret, name):
     (daily_ret - 1).clip(lower=0).plot.area(color='#FFBA12')
 
     plt.axis('off')
-    plt.savefig("strategies/static/public/{}.png".format(name),
+    plt.savefig("strategies/{}.png".format(name),
                 format='png', transparent=True, dpi=300, pad_inches=0, bbox_inches='tight')
 
 

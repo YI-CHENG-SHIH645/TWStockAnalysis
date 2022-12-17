@@ -28,5 +28,5 @@ if __name__ == '__main__':
         summary["trading_record"].append(item[1])
 
     import json
-    f = open('strategies/static/info.json', 'w', encoding='utf-8')
+    f = open('strategies/info.json', 'w', encoding='utf-8')
     json.dump(summary, f, indent=4)
