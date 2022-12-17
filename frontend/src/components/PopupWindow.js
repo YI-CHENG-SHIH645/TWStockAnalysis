@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
+import { getLineOptions } from "./dataPlot"
 import SectionHeading from "./SectionHeading";
-import { getLineOptions } from "./utils/dataPlot"
+import DataTableComponent from "./TablePagination";
 import Highcharts from 'highcharts'
 import HighchartsReact from "highcharts-react-official";
-import DataTableComponent from "./TablePagination";
 
 class PopupWindow extends Component {
 
