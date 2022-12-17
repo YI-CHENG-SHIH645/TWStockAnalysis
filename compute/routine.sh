@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo docker build . -t run_analysis
 sudo docker run -d --rm \
                     --name run_analysis \
                     -v "$PWD":/usr/src/twstock_analysis \
