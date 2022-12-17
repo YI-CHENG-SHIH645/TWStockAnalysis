@@ -12,7 +12,7 @@ class Logic:
     def __init__(self, start_date, skip_select=False):
         self.close_start = start_date - dt.timedelta(days=self.mature_day * 2)
         self.start_date = start_date
-        # how to use these information?  check ./BBandsLogic.py for example
+        # how to use this information?  check ./BBandsLogic.py for example
         # after understanding the data structure, you can start to build ur own strategies
         # ********* note: remember to inherit this base class "Logic" *********
 

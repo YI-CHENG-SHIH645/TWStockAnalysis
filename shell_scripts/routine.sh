@@ -8,5 +8,5 @@ sudo docker run -d --rm \
                      python -um strategies.run >> output.txt 2>&1"
 ##                    python -um data.crawler.brokers >> output.txt 2>&1
 
-cp -r "$PWD/strategies/static/." "$HOME/twstock_investment_lb4/public/"
+cp -r "$PWD/strategies/static/." "$PWD/../twstock_investment_lb4/public/"
 # pg_dump --no-owner financial_data > financial_data.dump
