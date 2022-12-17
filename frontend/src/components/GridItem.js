@@ -11,8 +11,8 @@ class GridItem extends Component {
                 <i className="fas fa-plus fa-3x"/>
               </div>
             </div>
-            <img className="img-fluid" src={`http://${base_url}/public/${this.props.summary.strategy_name}.png`} alt=""/>
-            <div className="top-left">{this.props.summary.strategy_name}</div>
+            <img className="img-fluid" src={`http://${base_url}/pictures/${this.props.summary['strategy_name']}.png`} alt=""/>
+            <div className="top-left">{this.props.summary['strategy_name']}</div>
             <div className="left">年化報酬<br/>
               <span className="btdata">
                 {this.props.summary['annual_return'] + "%"}

@@ -2,7 +2,7 @@ export const getLineOptions = (data) => {
   return {
 
     title: {
-      text: data.strategy_name
+      text: data['strategy_name']
     },
 
     xAxis: {
@@ -17,8 +17,8 @@ export const getLineOptions = (data) => {
 
     series: [
       {
-        name: data.strategy_name,
-        data: Object.entries(data.daily_return).map(([k, v]) => [new Date(k), v])
+        name: data['strategy_name'],
+        data: Object.entries(data['daily_return']).map(([k, v]) => [new Date(k), v])
       }
     ],
 

@@ -52,10 +52,10 @@ class PopupWindow extends Component {
                         <div>{this.render_cards(tb_item.slice(0, 4))}</div>
                         <div>{this.render_cards(tb_item.slice(4))}</div>
                         <p className="highcharts-description" style={{marginTop: "40px"}}>{this.props.signal.date + " "}
-                          的隔日買入推薦:<br/><span className="signal" style={{whiteSpace: "pre"}}>{this.show_list(this.props.signal.buy, 5)}</span><br/>
+                          的隔日買入推薦:<br/><span className="signal" style={{whiteSpace: "pre"}}>{this.show_list(this.props.signal['buy'], 5)}</span><br/>
                         </p>
                         <p className="highcharts-description" style={{marginTop: "25px"}}>{this.props.signal.date + " "}
-                          的隔日賣出推薦:<br/><span className="signal" style={{whiteSpace: "pre"}}>{this.show_list(this.props.signal.sell, 5)}</span>
+                          的隔日賣出推薦:<br/><span className="signal" style={{whiteSpace: "pre"}}>{this.show_list(this.props.signal['sell'], 5)}</span>
                         </p>
                       </figure>
                       <DataTableComponent data={this.props.records}/>

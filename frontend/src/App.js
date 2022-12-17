@@ -4,8 +4,7 @@ import PopupWindow from "./components/PopupWindow";
 import SectionHeading from "./components/SectionHeading";
 import './App.css';
 
-
-const base_url = '35.234.8.96:3000'
+const base_url = '127.0.0.1:3000'
 
 class App extends Component{
   state = {}
