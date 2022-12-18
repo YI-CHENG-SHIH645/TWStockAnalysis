@@ -109,7 +109,9 @@ class MoneyDistribution:
         return df
 
     def _get_all_records(self):
-        records_df = self.history_record[self.history_record.tid.isin(self.record_id)]
+        records_df = self.history_record[self.history_record.tid.isin(self.record_id)].copy()
+        records_df['open_price'] = records_df['open_price'].round(2)
+        records_df['close_price'] = records_df['close_price'].round(2)
         trading_records = {
             "strategy_name": self.strategy_name,
             "records": list(records_df.astype({"open_date": str, "close_date": str, "last_check": str})
