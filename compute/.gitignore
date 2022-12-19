@@ -3,6 +3,7 @@
 cache
 output.txt
 data/database/config.py
+data/crawler/
 
 
 # Byte-compiled / optimized / DLL files
