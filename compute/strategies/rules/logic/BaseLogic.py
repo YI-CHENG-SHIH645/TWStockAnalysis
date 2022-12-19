@@ -9,6 +9,7 @@ class Logic:
     mature_day = 25  # required
     stop_loss = None  # required
 
+    # cumtime: 54.8s
     def __init__(self, start_date, skip_select=False):
         self.close_start = start_date - dt.timedelta(days=self.mature_day * 2)
         self.start_date = start_date

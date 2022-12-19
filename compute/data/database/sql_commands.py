@@ -17,6 +17,12 @@ sql_commands = {
         WHERE open_date IS NOT NULL AND strategy_name='{}'
     """,
 
+    "drop_history_record": """
+        DELETE 
+        FROM trading_record 
+        WHERE strategy_name='{}'
+    """,
+
     "add_trading_record": """
         INSERT INTO trading_record (sid, strategy_name, trader_code, holding_days, last_check)
         VALUES('{}', '{}', '{}', '{}', '{}')

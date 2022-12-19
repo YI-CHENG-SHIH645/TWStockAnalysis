@@ -8,8 +8,8 @@ TAX = 3e-3
 # else you will buy the max possible shares of the stock (include tax & fee)
 # note: this value will alter during process (based on current portfolio value)
 class EvenDistribution(MoneyDistribution):
-    def __init__(self, strategy_name: str, init_balance=1e3, div_const=10):
-        super().__init__(strategy_name, init_balance)
+    def __init__(self, args, strategy_name: str, init_balance=1e3, div_const=10):
+        super().__init__(args, strategy_name, init_balance)
         self.max_price_for_one = self.init_balance // div_const
         self.div_const = div_const
 

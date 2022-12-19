@@ -10,8 +10,9 @@ TAX = 3e-3
 
 
 class MoneyDistribution:
-    # money per unit: thousand (ex: 1000 = 1 million)
-    def __init__(self, strategy_name: str, init_balance=1e3):
+    # money per unit: thousands (ex: 1000 = 1 million)
+    def __init__(self, args, strategy_name: str, init_balance=1e3):
+        self.args = args
         # 取得策略名稱對應的歷史交易推薦
         history_record = get_history_record(strategy_name)
 
@@ -131,6 +132,7 @@ class MoneyDistribution:
     def reaction_after_sell(self):
         pass
 
+    # cumtime: 46.3s
     def cal(self):
         for date in self.adjc.index:
             if date < self.start_date:
@@ -147,7 +149,8 @@ class MoneyDistribution:
                               self.portfolio_value,
                               self.init_balance,
                               self.holding,
-                              self.money)
+                              self.money,
+                              self.args)
         trading_records = self._get_all_records()
 
         return summary, trading_records

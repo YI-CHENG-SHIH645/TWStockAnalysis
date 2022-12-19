@@ -25,7 +25,8 @@ def cal_summary(strategy_name: str,
                 portfolio_value: dict,
                 init_balance: float,
                 holding: dict,
-                money: float):
+                money: float,
+                args):
     profit = list(portfolio_value.values())
 
     max_profit = list(max(portfolio_value.items(), key=operator.itemgetter(1)))
@@ -58,6 +59,7 @@ def cal_summary(strategy_name: str,
 
     ret_series = pd.Series(summary['daily_return'])
     summary.update({"mdd": -round(((ret_series.cummax() - ret_series) / ret_series.cummax()).max() * 100, 2)})
-    plot_return(ret_series, strategy_name)
+    if not args.profiling_name:
+        plot_return(ret_series, strategy_name)
 
     return summary

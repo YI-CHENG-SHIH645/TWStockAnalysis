@@ -1,6 +1,8 @@
-1. install docker, make sure that you can run docker command without sudo
+1. install psql, create a database called "financial_data", use the .sql file to restore
 
-2. add a file called "config.py" under dir "compute/data/database/", format is like
+2. install docker, make sure that you can run docker command without sudo
+
+3. add a file called "config.py" under dir "compute/data/database/", format is like
 ```
 psql_config = {
     "database": 'financial_data',

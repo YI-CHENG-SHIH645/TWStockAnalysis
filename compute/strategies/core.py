@@ -70,12 +70,19 @@ def _trade(cur, logic, tid: int, sid: str, open_price, holding_days, last_date_s
         execute_sql('update_pnl', (pnl, tid), cur=cur, return_result=False)
 
 
-def strategy(logic_cls: Logic.__class__, start_date="2013-01-01", skip_select=False):
+# cumtime: 69.5s
+def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_select=False):
     with PsqlConnect() as (conn, cur):
         create_table(cur, "trading_record")
+        if args.new_start:
+            execute_sql('drop_history_record', (logic_cls.strategy_name,), return_result=False)
         records = res_to_df(*execute_sql('get_trading_record', (logic_cls.strategy_name, ), cur=cur))
-        start_date = dt.datetime.strptime(start_date, "%Y-%m-%d").date() \
-            if not len(records) else records.loc[0, "last_check"]
+
+        if not len(records):
+            start_date = dt.datetime.strptime(start_date, "%Y-%m-%d").date()
+        else:
+            start_date = records.loc[0, "last_check"]
+
         last_date_signal = defaultdict(list)
         logic = logic_cls(start_date, skip_select=skip_select)
         last_date_signal['strategy_name'] = logic.strategy_name
@@ -83,14 +90,11 @@ def strategy(logic_cls: Logic.__class__, start_date="2013-01-01", skip_select=Fa
         last_date_signal['date'] = today.strftime("%Y-%m-%d")
         for sid in logic.c:
             if sid not in records['sid'].values:
-                tid = execute_sql(
-                    'add_trading_record', (sid, logic.strategy_name, logic.trader_code, 0, today),
-                    cur=cur
-                )[0][0][0]
+                params = (sid, logic.strategy_name, logic.trader_code, 0, today)
+                tid = execute_sql('add_trading_record', params, cur=cur)[0][0][0]
                 open_price, holding_days = None, 0
             else:
-                tid, open_price, holding_days = records[records.sid == sid][
-                    ["tid", "open_price", "holding_days"]].values[0]
+                tid, open_price, holding_days = records.loc[records.sid == sid, ["tid", "open_price", "holding_days"]].values[0]
             _trade(cur, logic, int(tid), sid, open_price, int(holding_days), last_date_signal, today)
         conn.commit()
         holdings = res_to_df(*execute_sql('get_holding', (logic.strategy_name, ), cur=cur))
