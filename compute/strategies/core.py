@@ -17,9 +17,10 @@ def _get_pnl(open_price, sell_price, return_tax_fee=False):
         return pnl
 
 
+# 2nd parallelize this
 def _trade(cur, logic, tid: int, sid: str, open_price, holding_days, last_date_signal, today):
     execute_sql('update_last_check', (today, tid), cur=cur, return_result=False)
-    o, c = logic.adjo, logic.adjc
+    o, c = logic.get('adj_o'), logic.get('adj_c')
     last_date = c.index[-1]
     for i, date in enumerate(c.index):
         if date < logic.start_date or i < logic.mature_day:
@@ -70,7 +71,7 @@ def _trade(cur, logic, tid: int, sid: str, open_price, holding_days, last_date_s
         execute_sql('update_pnl', (pnl, tid), cur=cur, return_result=False)
 
 
-# cumtime: 69.5s
+# cumtime: 42.6s
 def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_select=False):
     with PsqlConnect() as (conn, cur):
         create_table(cur, "trading_record")

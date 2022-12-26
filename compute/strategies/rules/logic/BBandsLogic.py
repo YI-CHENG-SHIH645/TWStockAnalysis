@@ -12,7 +12,7 @@ class BBandsLogic(Logic):
         self.upper, self.ma20, self.lower = [self.c.copy(), self.c.copy(), self.c.copy()]
         for sid in self.c:
             self.upper.loc[:, sid], self.ma20.loc[:, sid], \
-                self.lower.loc[:, sid] = BBANDS(self.talib_dict[sid], timeperiod=20, nbdevup=2.1)
+                self.lower.loc[:, sid] = BBANDS(self.get('talib_dict')[sid], timeperiod=20, nbdevup=2.1)
 
         # 紅K 且 收盤站上布林上通道
         cond1 = (self.c > self.upper) & (self.c > self.o)
@@ -28,14 +28,10 @@ class BBandsLogic(Logic):
         self.select = cond1 & cond2 & cond3 & cond4 & cond5
 
     def buy_logic(self, sid, date):
-        if self.cond_twii.loc[date].item():
-            return False
         return sid in self.selected[date]
 
     # kwargs: open_price(停損), holding_days
     def sell_logic(self, sid, date, **kwargs):
-        if self.cond_twii.loc[date].item():
-            return True
         cond1 = kwargs['holding_days'] >= 30
         cond2 = self.c.loc[date, sid] < self.ma20.loc[date, sid]
         return any([cond1, cond2])

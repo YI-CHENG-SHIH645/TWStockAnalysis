@@ -1,4 +1,3 @@
-import data
 import pandas as pd
 import numpy as np
 from strategies.rules.money_distribution.utils \
@@ -28,9 +27,9 @@ class MoneyDistribution:
         self.history_record = history_record
 
         # 取得收盤價並且計算調整收盤
-        self.c = data.get("close").ffill()
-        adj_ratio = data.get_adj_ratio(self.c.index, self.c.columns)
-        self.adjc = self.c * adj_ratio
+        self.c = args.c
+        adj_ratio = args.adj_ratio
+        self.adj_c = args.adj_c
 
         # 給定起始金額
         self.init_balance = init_balance
@@ -59,11 +58,12 @@ class MoneyDistribution:
         s = self.history_record.tid.isin([tid])
         self.history_record.loc[s[s].index, "shares"] = num
 
+    # 1st: parallelize this
     def cal_value(self):
         # cash on hand
         value = self.money
         for sid in self.holding:
-            close = self.adjc.loc[self.today, sid]
+            close = self.adj_c.loc[self.today, sid]
             assert not np.isnan(close)
             value += close * self.get_shares(self.holding[sid])
         return value
@@ -132,9 +132,9 @@ class MoneyDistribution:
     def reaction_after_sell(self):
         pass
 
-    # cumtime: 46.3s
+    # cumtime: 45.8s
     def cal(self):
-        for date in self.adjc.index:
+        for date in self.adj_c.index:
             if date < self.start_date:
                 continue
             self.today = date
@@ -144,7 +144,7 @@ class MoneyDistribution:
             self.try_to_buy()
 
         print('money distribution of {} till {} ---> OK!'.format(self.strategy_name,
-                                                                 self.adjc.index[-1].strftime("%Y-%m-%d")))
+                                                                 self.adj_c.index[-1].strftime("%Y-%m-%d")))
         summary = cal_summary(self.strategy_name,
                               self.portfolio_value,
                               self.init_balance,

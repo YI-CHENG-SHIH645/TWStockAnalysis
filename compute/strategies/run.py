@@ -16,6 +16,9 @@ def main(args):
     ]:
         summary["latest_signal"].append(item)
 
+    args.c = ITFollowLogic.c
+    args.adj_ratio = ITFollowLogic.adj_ratio
+    args.adj_c = args.c * args.adj_ratio
     # money distribution logic
     for item in [
         # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

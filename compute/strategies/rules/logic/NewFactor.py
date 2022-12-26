@@ -12,18 +12,15 @@ class NewFactor(Logic):
     mature_day = 130
     stop_loss = 0.06
 
-    def _load_data(self):
-        self.pe = self.get_data("pe")   # 本益比
-        self.pb = self.get_data("pb")   # 股價淨值比
-        self.net_income = self.get_data("net_income", align=False)    # 稅後淨利
-        self.total_equity = self.get_data("total_equity", align=False)    # 權益總計
-        self.ma20 = self.adjc.apply(lambda c: MA(c, timeperiod=20))
-
     def _cal_indicators(self):
-        origin_idx = self.pb.index
+        pb = self.get("pb")  # 股價淨值比
+        net_income = self.get("net_income", align=False)  # 稅後淨利
+        total_equity = self.get("total_equity", align=False)  # 權益總計
+        self.ma20 = self.get('adj_c').apply(lambda c: MA(c, timeperiod=20))
+        origin_idx = pb.index
 
         # 股東權益報酬率 = 稅後淨利 / 權益總計
-        roe = (self.net_income / self.total_equity) * 100
+        roe = (net_income / total_equity) * 100
         roe = roe.truncate(after=get_season(datetime.now().date()))
 
         # ROE成長 = 本季 ROE / 上季 ROE
@@ -32,10 +29,10 @@ class NewFactor(Logic):
         roe_fac = roe_fac.truncate(after=get_season(datetime.now().date()))
 
         # pb的時間序列轉換成最近一季的日期
-        self.pb.index = date_to_latest_season(self.pb.index)
+        pb.index = date_to_latest_season(pb.index)
 
         # 依據ROE成長的最早時間，處理股價淨值比的時間序列(align)
-        pb = self.pb.truncate(before=roe_fac.index.min())
+        pb = pb.truncate(before=roe_fac.index.min())
 
         # 把pb的時間序列照最近一季的日期分組，再把對應季的ROE成長 除上 pb
         new_factor = pb.groupby(pb.index).apply(lambda t: 1 / t.div(roe_fac.loc[t.index[0]]))
@@ -76,6 +73,6 @@ class NewFactor(Logic):
     def sell_logic(self, sid, date, **kwargs):
         cond1 = kwargs['holding_days'] >= 60
         if kwargs['holding_days'] % 11 == 0:
-            cond1 = cond1 or self.adjc.loc[date, sid] < self.ma20.loc[date, sid]
+            cond1 = cond1 or self.get('adj_c').loc[date, sid] < self.ma20.loc[date, sid]
 
         return cond1

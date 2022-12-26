@@ -9,23 +9,21 @@ class PEPBLogic(Logic):
     mature_day = 25
     stop_loss = 0.06
 
-    def _load_data(self):
-        self.pe = self.get_data("pe")
-        self.pb = self.get_data("pb")
-        self.twii_c = self.get_data("twii_close", no_sid=True)
-        self.twii_ma25 = self.twii_c[['twii']].apply(lambda c: MA(c, timeperiod=25))
-
     def _cal_indicators(self):
+        pe = self.get("pe")
+        pb = self.get("pb")
+        twii_c = self.get("twii_close")
+        twii_ma25 = twii_c[['twii']].apply(lambda c: MA(c, timeperiod=25))
 
         # 本益比 小於 13
-        cond1 = self.pe < 13
+        cond1 = pe < 13
 
         # 股價淨值比 小於 0.7
-        cond2 = self.pb < 0.7
+        cond2 = pb < 0.7
 
         twii_cond = pd.DataFrame(~(
-                (self.twii_c < self.twii_ma25) &
-                (self.twii_ma25 < self.twii_ma25.shift(1))
+                (twii_c < twii_ma25) &
+                (twii_ma25 < twii_ma25.shift(1))
         ))
 
         self.select = (cond1 & cond2).apply(lambda r: r & twii_cond.loc[r.name, 'twii'], axis=1)
