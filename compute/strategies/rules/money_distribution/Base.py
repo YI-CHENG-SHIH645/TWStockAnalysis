@@ -58,7 +58,7 @@ class MoneyDistribution:
         s = self.history_record.tid.isin([tid])
         self.history_record.loc[s[s].index, "shares"] = num
 
-    # 1st: parallelize this
+    # TODO 1st: parallelize this
     def cal_value(self):
         # cash on hand
         value = self.money

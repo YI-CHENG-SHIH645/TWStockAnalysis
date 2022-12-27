@@ -14,8 +14,13 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     make install && \
     pip install ta-lib
 
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+COPY compute ./compute
+RUN cd compute && \
+    pip install -r requirements.txt
 
-COPY . .
+RUN apt-get update && apt-get -y install cmake protobuf-compiler
+
+COPY core ./core
+RUN cd core && mkdir build
+
 EXPOSE 5432

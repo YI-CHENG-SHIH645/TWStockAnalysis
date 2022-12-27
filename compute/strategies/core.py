@@ -1,6 +1,7 @@
 from data.database.interface import create_table, PsqlConnect, \
                                     execute_sql, res_to_df
 from strategies.rules.logic import Logic
+from strategies.cpp_acc.core import print_hi
 from collections import defaultdict
 import datetime as dt
 import numpy as np
@@ -17,7 +18,7 @@ def _get_pnl(open_price, sell_price, return_tax_fee=False):
         return pnl
 
 
-# 2nd parallelize this
+# TODO 2nd parallelize this
 def _trade(cur, logic, tid: int, sid: str, open_price, holding_days, last_date_signal, today):
     execute_sql('update_last_check', (today, tid), cur=cur, return_result=False)
     o, c = logic.get('adj_o'), logic.get('adj_c')
@@ -71,7 +72,6 @@ def _trade(cur, logic, tid: int, sid: str, open_price, holding_days, last_date_s
         execute_sql('update_pnl', (pnl, tid), cur=cur, return_result=False)
 
 
-# cumtime: 42.6s
 def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_select=False):
     with PsqlConnect() as (conn, cur):
         create_table(cur, "trading_record")
@@ -103,4 +103,5 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
     last_date_signal['hold'].extend(holdings['sid'].values)
     last_date_signal['buy'].extend(logic.selected[logic.c.index[-1]])
     last_date_signal['sell'].extend([])
+    print_hi()
     return last_date_signal
