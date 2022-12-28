@@ -90,13 +90,15 @@ def _align_idx_with_ohlcv(c_index, df, back_fil=False):
     :param back_fil: boolean, call df backfill or not
     :return: df with aligned index
     """
-    for d in c_index.difference(df.index):
-        df.loc[d] = [np.nan] * df.shape[1]
+    df = df.reindex(index=c_index)
+    # assert df.index.is_monotonic_increasing
+    # for d in c_index.difference(df.index):
+    #     df.loc[d] = [np.nan] * df.shape[1]
 
-    df = df.sort_index().ffill()
+    df = df.ffill()
     if back_fil:
         df = df.backfill()
-    df = df.drop(df.index.difference(c_index))
+    # df = df.drop(df.index.difference(c_index))
 
     return df
 

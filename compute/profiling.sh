@@ -15,12 +15,12 @@ if ! docker image ls --format "{{.Repository}}" | grep -q twstock_analysis; then
   cd compute || exit
 fi
 
-sudo docker run -d --rm \
-                    --name profiling \
-                    -v "$PWD":/usr/src/twstock_analysis/compute \
-                    -w /usr/src/twstock_analysis/compute \
-                    twstock_analysis /bin/bash -c \
-                    " cd ../core/build &&
-                      cmake .. && make &&
-                      cd ../../compute &&
-                     python -um strategies.run --profiling_name=\"$1\" --new_start > output.txt 2>&1";
+docker run -d --rm \
+              --name profiling \
+              -v "$PWD":/usr/src/twstock_analysis/compute \
+              -w /usr/src/twstock_analysis/compute \
+              twstock_analysis /bin/bash -c \
+              " cd ../core/build &&
+                cmake .. && make &&
+                cd ../../compute &&
+               python -um strategies.run --profiling_name=\"$1\" --new_start > output.txt 2>&1";

@@ -1,5 +1,6 @@
 import data
 import bisect
+import numpy as np
 import datetime as dt
 from datetime import datetime
 
@@ -42,11 +43,14 @@ def season_to_public_date(time_series):
 
 
 def fill_after_pub_date(df_filled, data_df, pub_dates):
-    for idx, date in enumerate(pub_dates):
-        shifted_date = date
-        while shifted_date not in df_filled.index:
-            shifted_date += dt.timedelta(days=1)
-        df_filled.loc[shifted_date, :] = data_df.iloc[idx]
+    idx = np.searchsorted(df_filled.index.values, np.array(pub_dates))
+    shifted_dates = df_filled.index[idx]
+    df_filled.loc[shifted_dates, data_df.columns] = data_df.values
+    # for idx, date in enumerate(pub_dates):
+    #     shifted_date = df_filled.index[df_filled.index.get_loc(date, method='nearest')]
+    #     while shifted_date not in df_filled.index:
+    #         shifted_date += dt.timedelta(days=1)
+    #     df_filled.loc[shifted_date, data_df.columns] = data_df.iloc[idx].values
     df = df_filled.ffill()
 
     return df

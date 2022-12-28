@@ -17,7 +17,7 @@ sudo docker run -d --rm \
                     " cd ../core/build &&
                       cmake .. && make &&
                       cd ../../compute &&
-                      python -um strategies.run > output.txt 2>&1";
+                      python -um strategies.run --new_start > output.txt 2>&1";
 #                    " python -um data.crawler.run > output.txt 2>&1 &&
 
 ##                    python -um data.crawler.brokers >> output.txt 2>&1

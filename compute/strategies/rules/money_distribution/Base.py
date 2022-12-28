@@ -25,6 +25,7 @@ class MoneyDistribution:
         self.end_date_grps = history_record.groupby('close_date')
 
         self.history_record = history_record
+        self.tid2shares = dict(zip(history_record.tid, history_record.shares))
 
         # 取得收盤價並且計算調整收盤
         self.c = args.c
@@ -51,12 +52,12 @@ class MoneyDistribution:
         self.today = None
 
     def get_shares(self, tid):
-        s = self.history_record.tid.isin([tid])
-        return self.history_record.loc[s[s].index, "shares"].values[0]
+        return self.tid2shares[tid]
 
     def set_shares(self, tid, num):
         s = self.history_record.tid.isin([tid])
         self.history_record.loc[s[s].index, "shares"] = num
+        self.tid2shares.update({tid: num})
 
     # TODO 1st: parallelize this
     def cal_value(self):
@@ -103,7 +104,7 @@ class MoneyDistribution:
             return pd.DataFrame()
         # get recommendation list
         df = self.end_date_grps.get_group(self.today)
-        # whether i have stock on my hand that's also on the recommendation list
+        # whether I have stock on my hand that's also on the recommendation list
         sell = set(self.holding.keys()).intersection(set(df.sid))
         df = df[df.sid.isin(sell)]
 
