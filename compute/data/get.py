@@ -13,7 +13,7 @@ cache_path = "./cache/"
 
 
 # 要求一個資料的 dataframe
-def get(item, before=None, c_index=None, no_sid=False):
+def get(item, before=None, c_index=None, no_sid=False, update=False):
     # 確認有個快取路徑存在
     if not osp.isdir(cache_path):
         os.mkdir(cache_path)
@@ -24,11 +24,12 @@ def get(item, before=None, c_index=None, no_sid=False):
     if osp.exists(path):
         df = pkl.load(open(path, 'rb'))
 
-        # 從快取最新開始往後找資料
-        new_data = _get_data(item, str(df.index[-1] + dt.timedelta(days=1)))
-        if len(new_data):
-            df = df.append(new_data)
-            cache_update = True
+        if update:
+            # 從快取最新開始往後找資料
+            new_data = _get_data(item, str(df.index[-1] + dt.timedelta(days=1)))
+            if len(new_data):
+                df = df.append(new_data)
+                cache_update = True
     # 沒快取，預設從 2010 年取資料
     else:
         df = _get_data(item, "2010-01-01")

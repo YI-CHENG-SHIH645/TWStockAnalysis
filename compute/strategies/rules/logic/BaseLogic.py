@@ -1,6 +1,8 @@
 from data.utils import talib_format
 import data
 import datetime as dt
+from collections import defaultdict
+import pandas as pd
 
 
 class Logic:
@@ -25,7 +27,7 @@ class Logic:
         self.close_start = start_date - dt.timedelta(days=self.mature_day * 2)
         self.start_date = start_date
 
-        self.select, self.selected = None, {}
+        self.select, self.selected = None, None
         self._cal_indicators()
         if not skip_select:
             self.__make_selected_dict()
@@ -51,10 +53,14 @@ class Logic:
         return self.__data[tgt]
 
     def __make_selected_dict(self):
-        assert self.select is not None
-        for date in self.select.index:
-            selected = self.select.loc[date][self.select.loc[date]].index
-            self.selected.update({date: selected})
+        # assert self.select is not None
+        # for date in self.select.index:
+        #     selected = self.select.loc[date][self.select.loc[date]].index
+        #     self.selected.update({date: selected})
+        idx, col = self.select.values.nonzero()
+        df = pd.DataFrame.from_records(zip(self.select.index[idx], self.select.columns[col]), columns=['date', 'sid'])
+        self.selected = defaultdict(list, df.groupby('date', sort=False)['sid']
+                                            .apply(list).to_dict())
 
     def __get_data(self, tgt: str, align=True):
         """

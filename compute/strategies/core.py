@@ -95,7 +95,8 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
                 tid = execute_sql('add_trading_record', params, cur=cur)[0][0][0]
                 open_price, holding_days = None, 0
             else:
-                tid, open_price, holding_days = records.loc[records.sid == sid, ["tid", "open_price", "holding_days"]].values[0]
+                tid, open_price, holding_days =\
+                    records.loc[records.sid == sid, ["tid", "open_price", "holding_days"]].values[0]
             _trade(cur, logic, int(tid), sid, open_price, int(holding_days), last_date_signal, today)
         conn.commit()
         holdings = res_to_df(*execute_sql('get_holding', (logic.strategy_name, ), cur=cur))

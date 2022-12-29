@@ -26,7 +26,11 @@ class PEPBLogic(Logic):
                 (twii_ma25 < twii_ma25.shift(1))
         ))
 
-        self.select = (cond1 & cond2).apply(lambda r: r & twii_cond.loc[r.name, 'twii'], axis=1)
+        cond2 = cond2.reindex_like(cond1).fillna(False)
+        cond = cond1 & cond2
+        self.select = cond.copy()
+        self.select.loc[:, :] = cond.values & twii_cond.values
+        # self.select = (cond1 & cond2).apply(lambda r: r & twii_cond.loc[r.name, 'twii'], axis=1)
 
     def buy_logic(self, sid, date):
         return sid in self.selected[date]

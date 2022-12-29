@@ -15,7 +15,8 @@ class EvenDistribution(MoneyDistribution):
 
     def try_to_buy(self):
         recommendation = self.get_buy_recommendation()
-
+        if recommendation is None:
+            return
         # for each recommendation
         for row in recommendation.iterrows():
             open_price, sid, tid = row[1].open_price, row[1].sid, row[1].tid
@@ -27,7 +28,8 @@ class EvenDistribution(MoneyDistribution):
 
     def try_to_sell(self):
         recommendation = self.get_sell_recommendation()
-
+        if recommendation is None:
+            return
         # for each recommendation
         for row in recommendation.iterrows():
             close_price, sid, tid = row[1].close_price, row[1].sid, row[1].tid

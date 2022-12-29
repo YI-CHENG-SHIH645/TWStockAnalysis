@@ -59,7 +59,6 @@ class MoneyDistribution:
         self.history_record.loc[s[s].index, "shares"] = num
         self.tid2shares.update({tid: num})
 
-    # TODO 1st: parallelize this
     def cal_value(self):
         # cash on hand
         value = self.money
@@ -89,19 +88,19 @@ class MoneyDistribution:
     def get_buy_recommendation(self):
         # today no recommendation
         if self.today not in self.start_date_grps.groups.keys():
-            return pd.DataFrame()
+            return None
         # get recommendation list
         df = self.start_date_grps.get_group(self.today)
         # it's impossible to purchase even the cheapest one
         if self.money < df.open_price.min() * (1 + FEE):
-            return pd.DataFrame()
+            return None
 
         return df
 
     def get_sell_recommendation(self):
         # today no recommendation
         if self.today not in self.end_date_grps.groups.keys():
-            return pd.DataFrame()
+            return None
         # get recommendation list
         df = self.end_date_grps.get_group(self.today)
         # whether I have stock on my hand that's also on the recommendation list
