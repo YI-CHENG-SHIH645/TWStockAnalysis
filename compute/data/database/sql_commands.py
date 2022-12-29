@@ -89,5 +89,10 @@ sql_commands = {
         SELECT sid, date, {}
         FROM {}
         WHERE date >= '{}'
+    """,
+
+    "get_max_tid": """
+        SELECT MAX(tid)
+        FROM trading_record
     """
 }
