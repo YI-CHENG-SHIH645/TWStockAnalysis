@@ -26,6 +26,6 @@ sudo docker run -d --rm \
 
 sudo docker wait run_analysis
 mkdir -p ../backend_api/public/pictures
-#mv "$PWD"/strategies/info.json "$PWD"/../backend_api/public
-#mv "$PWD"/strategies/*.png "$PWD"/../backend_api/public/pictures
+mv "$PWD"/strategies/info.json "$PWD"/../backend_api/public
+mv "$PWD"/strategies/*.png "$PWD"/../backend_api/public/pictures
 # pg_dump --no-owner financial_data > financial_data.dump
