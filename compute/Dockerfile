@@ -21,6 +21,6 @@ RUN cd compute && \
 RUN apt-get update && apt-get -y install cmake protobuf-compiler
 
 COPY core ./core
-RUN cd core && mkdir build
+RUN cd core && mkdir -p build
 
 EXPOSE 5432

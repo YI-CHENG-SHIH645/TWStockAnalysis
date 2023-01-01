@@ -10,6 +10,7 @@ class Logic:
     trader_code = None  # required
     mature_day = 25  # required
     stop_loss = None  # required
+    holding_days_th = -1  # required
     __data = None
     o = data.get('open')
     h = data.get('high')

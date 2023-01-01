@@ -8,6 +8,7 @@ class PEPBLogic(Logic):
     trader_code = "001"
     mature_day = 25
     stop_loss = 0.06
+    holding_days_th = 126
 
     def _cal_indicators(self):
         pe = self.get("pe")
@@ -36,5 +37,5 @@ class PEPBLogic(Logic):
         return sid in self.selected[date]
 
     def sell_logic(self, sid, date, **kwargs):
-        cond1 = kwargs['holding_days'] >= 126
+        cond1 = kwargs['holding_days'] >= self.holding_days_th
         return any([cond1])

@@ -8,6 +8,7 @@ class ITFollowLogic(Logic):
     trader_code = "001"
     mature_day = 25
     stop_loss = 0.06
+    holding_days_th = 30
 
     def _cal_indicators(self):
         it = self.get('investment_trust')
@@ -35,5 +36,5 @@ class ITFollowLogic(Logic):
         return sid in self.selected[date]
 
     def sell_logic(self, sid, date, **kwargs):
-        cond1 = kwargs['holding_days'] >= 30
+        cond1 = kwargs['holding_days'] >= self.holding_days_th
         return any([cond1])

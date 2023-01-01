@@ -11,6 +11,7 @@ class NewFactor(Logic):
     trader_code = "001"
     mature_day = 130
     stop_loss = 0.06
+    holding_days_th = 60
 
     def _cal_indicators(self):
         pb = self.get("pb")  # 股價淨值比
@@ -71,7 +72,7 @@ class NewFactor(Logic):
         return sid in self.selected[date]
 
     def sell_logic(self, sid, date, **kwargs):
-        cond1 = kwargs['holding_days'] >= 60
+        cond1 = kwargs['holding_days'] >= self.holding_days_th
         if kwargs['holding_days'] % 11 == 0:
             cond1 = cond1 or self.get('adj_c').loc[date, sid] < self.ma20.loc[date, sid]
 
