@@ -21,6 +21,7 @@ docker run -d --rm \
               -w /usr/src/twstock_analysis/compute \
               twstock_analysis /bin/bash -c \
               " cd ../core/build &&
+                rm CMakeCache.txt &&
                 cmake .. && make &&
                 cd ../../compute &&
                python -um strategies.run --profiling_name=\"$1\" --new_start > output.txt 2>&1";

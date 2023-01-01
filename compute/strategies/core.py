@@ -3,8 +3,9 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 from data.database.interface import create_table, PsqlConnect, \
-                                    execute_sql, res_to_df, upsert
+    execute_sql, res_to_df, upsert
 from strategies.rules.logic import Logic
+from strategies.cpp_acc.core import trade_on_sids
 
 
 def _get_pnl(open_price: float,
@@ -42,7 +43,6 @@ def _trade(dic_records: dict,
            selected: dict,
            strategy_name: str,
            trader_code: str):
-
     last_date = dates[-1]
     for i, date in enumerate(dates):
         if np.isfinite(open_price):
@@ -51,12 +51,12 @@ def _trade(dic_records: dict,
                 if date == last_date:
                     last_date_signal["sell"].append(sid)
                     break
-                sell_price = o[i+1]
+                sell_price = o[i + 1]
                 pnl, tax, fee = _get_pnl(open_price, sell_price, return_tax_fee=True)
                 tax = round(tax * 1000, 2)
                 fee = round(fee * 1000, 2)
 
-                sell_date = dates[i+1]
+                sell_date = dates[i + 1]
                 # 賣出 同時取消追蹤
                 dic_records[tid].update({
                     'close_date': sell_date,
@@ -83,7 +83,7 @@ def _trade(dic_records: dict,
         else:
             if sid in selected[date]:
                 if date != last_date:
-                    buy_date, buy_price = dates[i+1], o[i+1]
+                    buy_date, buy_price = dates[i + 1], o[i + 1]
                     r = {
                         'open_date': buy_date,
                         'open_price': buy_price,
@@ -123,7 +123,7 @@ def _trade_on_sids(sids: np.ndarray,
                 'holding_days': 0,
                 'last_check': today,
                 'open_price': np.nan,
-             }
+            }
             tid = available_tid
             dic_records[tid] = r
             available_tid += 1
@@ -147,7 +147,7 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
         if args.new_start:
             execute_sql('drop_history_record', (logic_cls.strategy_name,), cur=cur, return_result=False)
         conn.commit()
-        records = res_to_df(*execute_sql('get_trading_record', (logic_cls.strategy_name, ), cur=cur))
+        records = res_to_df(*execute_sql('get_trading_record', (logic_cls.strategy_name,), cur=cur))
         max_tid = execute_sql('get_max_tid', cur=cur)[0][0][0]
     if not len(records):
         start_date = dt.datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -174,27 +174,27 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
         ma20 = ma20.iloc[logic.mature_day:].truncate(before=logic.start_date)
         ma20 = ma20.values.T
 
-    _trade_on_sids(c.columns.values,
-                   dict(zip(o.columns, o.values.T)),
-                   dict(zip(c.columns, c.values.T)),
-                   dict(zip(c.columns, ma20)),
-                   dates,
-                   logic.selected,
-                   logic.holding_days_th,
-                   dic_records,
-                   last_date_signal,
-                   sid2tid,
-                   today,
-                   available_tid,
-                   logic.strategy_name,
-                   logic.trader_code)
+    trade_on_sids(c.columns.values,
+                  dict(zip(o.columns, o.values.T)),
+                  dict(zip(c.columns, c.values.T)),
+                  dict(zip(c.columns, ma20)),
+                  dates,
+                  logic.selected,
+                  logic.holding_days_th,
+                  dic_records,
+                  last_date_signal,
+                  sid2tid,
+                  today,
+                  available_tid,
+                  logic.strategy_name,
+                  logic.trader_code)
 
-    new_records = pd.DataFrame.from_dict(dic_records, orient='index')\
-                              .rename_axis('tid').reset_index()
+    new_records = pd.DataFrame.from_dict(dic_records, orient='index') \
+        .rename_axis('tid').reset_index()
     with PsqlConnect() as (conn, cur):
         upsert(cur, 'trading_record', ['tid'], new_records.columns.tolist()[1:], new_records)
         conn.commit()
-        holdings = res_to_df(*execute_sql('get_holding', (logic.strategy_name, ), cur=cur))
+        holdings = res_to_df(*execute_sql('get_holding', (logic.strategy_name,), cur=cur))
     print('signals of {} till {} ---> OK!'.format(logic.strategy_name, today.strftime("%Y-%m-%d")))
     last_date_signal['hold'].extend(holdings['sid'].values)
     last_date_signal['buy'].extend(logic.selected[logic.c.index[-1]])
