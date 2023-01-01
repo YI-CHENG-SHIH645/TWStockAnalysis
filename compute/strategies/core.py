@@ -165,13 +165,13 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
     dic_records = defaultdict(dict, records.to_dict(orient='index'))
 
     o, c = logic.get('adj_o'), logic.get('adj_c')
-    o = o.truncate(before=logic.start_date).iloc[logic.mature_day:]
-    c = o.truncate(before=logic.start_date).iloc[logic.mature_day:]
+    o = o.iloc[logic.mature_day:].truncate(before=logic.start_date)
+    c = o.iloc[logic.mature_day:].truncate(before=logic.start_date)
     dates = c.index.values
 
     ma20 = getattr(logic, "ma20", np.full_like(c.values.T, np.nan, dtype=float))
     if not isinstance(ma20, np.ndarray):
-        ma20 = ma20.truncate(before=logic.start_date).iloc[logic.mature_day:]
+        ma20 = ma20.iloc[logic.mature_day:].truncate(before=logic.start_date)
         ma20 = ma20.values.T
 
     _trade_on_sids(c.columns.values,
