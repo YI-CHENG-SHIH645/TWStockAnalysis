@@ -166,7 +166,7 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
 
     o, c = logic.get('adj_o'), logic.get('adj_c')
     o = o.iloc[logic.mature_day:].truncate(before=logic.start_date)
-    c = o.iloc[logic.mature_day:].truncate(before=logic.start_date)
+    c = c.iloc[logic.mature_day:].truncate(before=logic.start_date)
     dates = c.index.values
 
     ma20 = getattr(logic, "ma20", np.full_like(c.values.T, np.nan, dtype=float))
