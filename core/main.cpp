@@ -107,6 +107,7 @@ void trade(py::dict &dic_records,
 }
 
 
+// TODO: parallelize this
 void trade_on_sids(std::vector<std::string> &sids,
                    py::dict &o,
                    py::dict &c,

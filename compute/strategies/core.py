@@ -99,7 +99,6 @@ def _trade(dic_records: dict,
     return available_tid
 
 
-# TODO parallelize this
 def _trade_on_sids(sids: np.ndarray,
                    o: dict,
                    c: dict,
@@ -174,6 +173,7 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
         ma20 = ma20.iloc[logic.mature_day:].truncate(before=logic.start_date)
         ma20 = ma20.values.T
 
+    # TODO: parallelize this
     trade_on_sids(c.columns.values,
                   dict(zip(o.columns, o.values.T)),
                   dict(zip(c.columns, c.values.T)),
