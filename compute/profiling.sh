@@ -24,7 +24,7 @@ docker run -d --rm \
               " cd ../core &&
                 mkdir -p build &&
                 cd build &&
-                rm CMakeCache.txt &&
+                rm CMakeCache.txt;
                 cmake .. && make &&
                 cd ../../compute &&
                python -um strategies.run --profiling_name=\"$1\" --new_start > output.txt 2>&1";
