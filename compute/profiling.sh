@@ -21,7 +21,9 @@ docker run -d --rm \
               -v "$PWD/../core":/usr/src/twstock_analysis/core \
               -w /usr/src/twstock_analysis/compute \
               twstock_analysis /bin/bash -c \
-              " cd ../core/build &&
+              " cd ../core &&
+                mkdir -p build &&
+                cd build &&
                 rm CMakeCache.txt &&
                 cmake .. && make &&
                 cd ../../compute &&

@@ -174,20 +174,20 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
         ma20 = ma20.values.T
 
     # TODO: parallelize this
-    trade_on_sids(c.columns.values,
-                  dict(zip(o.columns, o.values.T)),
-                  dict(zip(c.columns, c.values.T)),
-                  dict(zip(c.columns, ma20)),
-                  pd.to_datetime(dates),
-                  logic.selected,
-                  logic.holding_days_th,
-                  dic_records,
-                  last_date_signal,
-                  sid2tid,
-                  pd.to_datetime(today),
-                  available_tid,
-                  logic.strategy_name,
-                  logic.trader_code)
+    _trade_on_sids(c.columns.values,
+                   dict(zip(o.columns, o.values.T)),
+                   dict(zip(c.columns, c.values.T)),
+                   dict(zip(c.columns, ma20)),
+                   pd.to_datetime(dates),
+                   logic.selected,
+                   logic.holding_days_th,
+                   dic_records,
+                   last_date_signal,
+                   sid2tid,
+                   pd.to_datetime(today),
+                   available_tid,
+                   logic.strategy_name,
+                   logic.trader_code)
 
     new_records = pd.DataFrame.from_dict(dic_records, orient='index') \
         .rename_axis('tid').reset_index()
