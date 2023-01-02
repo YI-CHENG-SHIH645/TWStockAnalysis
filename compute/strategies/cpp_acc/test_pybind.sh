@@ -1,4 +1,6 @@
 cd ../core/build || exit
+make clean
+rm CMakeCache.txt
 cmake ..
 make
 cd ../../compute || exit

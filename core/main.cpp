@@ -9,6 +9,10 @@
 
 namespace py = pybind11;
 
+void show_datetime(datetime t) {
+  std::time_t time_tt = std::chrono::system_clock::to_time_t(t);
+  std::cout << std::ctime(&time_tt) << std::endl;
+}
 
 bool sell_logic(int hd, int hd_th, float adj_c, float adj_c_ma20) {
   return (hd >= hd_th) || (adj_c < adj_c_ma20);
@@ -20,32 +24,30 @@ std::tuple<float, float, float> get_pnl(float open_price, float sell_price) {
   float pnl = (sell_price - open_price - tax - fee) / open_price;
   tax = std::round(tax*1000 * 100) / 100;
   fee = std::round(fee*1000 * 100) / 100;
-  pnl = std::round(pnl * 100) / 100;
+  pnl = std::round(pnl*100 * 100) / 100;
 
   return std::make_tuple(pnl, tax, fee);
 }
 
-
 void trade(py::dict &dic_records,
-          int tid,
-          std::string &sid,
-          float open_price,
-          int holding_days,
-          int holding_days_th,
-          py::dict &last_date_signal,
-          datetime today,
-          int &available_tid,
-          py::array_t<float> &o,
-          py::array_t<float> &c,
-          py::array_t<float> &ma20,
-          py::array_t<datetime> &dates,
-          py::dict &selected,
-          std::string &strategy_name,
-          std::string &trader_code) {
+           int tid,
+           std::string &sid,
+           float open_price,
+           int holding_days,
+           int holding_days_th,
+           py::dict &last_date_signal,
+           datetime today,
+           int &available_tid,
+           py::array_t<float> &o,
+           py::array_t<float> &c,
+           py::array_t<float> &ma20,
+           std::vector<datetime> &dates,
+           py::dict &selected,
+           std::string &strategy_name,
+           std::string &trader_code) {
   auto ptr_o = static_cast<float *>(o.request().ptr);
   auto ptr_c = static_cast<float *>(c.request().ptr);
   auto ptr_ma20 = static_cast<float *>(ma20.request().ptr);
-  auto ptr_dates = static_cast<datetime *>(dates.request().ptr);
   auto last_date_sell_list = py::cast<py::list>(last_date_signal["sell"]);
 
   for (size_t idx = 0; idx < o.size(); ++idx) {
@@ -60,7 +62,7 @@ void trade(py::dict &dic_records,
 
         float sell_price = ptr_o[idx + 1];
         auto triplet = get_pnl(open_price, sell_price);
-        datetime sell_date = ptr_dates[idx + 1];
+        datetime sell_date = dates[idx + 1];
 
         dic_records[std::to_string(tid).c_str()]["close_date"] = sell_date;
         dic_records[std::to_string(tid).c_str()]["close_price"] = sell_price;
@@ -83,9 +85,9 @@ void trade(py::dict &dic_records,
       }
     } else {
       // try to buy
-      if (py::cast<py::list>(selected[sid.c_str()]).contains(sid)) {
-        if (idx == o.size() - 1) {
-          datetime buy_date = ptr_dates[idx + 1];
+      if (selected.attr("get")(dates[idx], py::list()).contains(sid)) {
+        if (idx < o.size() - 1) {
+          datetime buy_date = dates[idx + 1];
           float buy_price = ptr_o[idx + 1];
           dic_records[std::to_string(tid).c_str()]["open_date"] = buy_date;
           dic_records[std::to_string(tid).c_str()]["open_price"] = buy_price;
@@ -109,7 +111,7 @@ void trade_on_sids(std::vector<std::string> &sids,
                    py::dict &o,
                    py::dict &c,
                    py::dict &ma20,
-                   py::dict &dates,
+                   std::vector<datetime> &dates,
                    py::dict &selected,
                    int holding_days_th,
                    py::dict &dic_records,
@@ -139,7 +141,6 @@ void trade_on_sids(std::vector<std::string> &sids,
     py::array_t<float> o_ = py::cast<py::array_t<float>>(o[sid.c_str()]);
     py::array_t<float> c_ = py::cast<py::array_t<float>>(c[sid.c_str()]);
     py::array_t<float> ma20_ = py::cast<py::array_t<float>>(ma20[sid.c_str()]);
-    py::array_t<datetime> dates_ = py::cast<py::array_t<datetime>>(dates[sid.c_str()]);
 
     float open_price = py::cast<float>(r["open_price"]);
     dic_records[std::to_string(tid).c_str()]["last_check"] = today;
@@ -147,7 +148,7 @@ void trade_on_sids(std::vector<std::string> &sids,
     trade(dic_records, tid, sid,
           open_price, holding_days, holding_days_th,
           last_date_signal, today, available_tid,
-          o_, c_, ma20_, dates_,
+          o_, c_, ma20_, dates,
           selected, strategy_name, trader_code);
   }
 }
@@ -170,12 +171,7 @@ py::array_t<double> add_two_array(py::array_t<double> &a, py::array_t<double> &b
   return result;
 }
 
-void show_datetime(datetime t) {
-  std::time_t time_tt = std::chrono::system_clock::to_time_t(t);
-  std::cout << std::ctime(&time_tt) << std::endl;
-}
-
-void show_dic_list(py::dict &d) {
+void check_dic_list(py::dict &d) {
   for(auto p : d) {
     const std::string& date = py::cast<const std::string>(p.first);
     std::cout << "date: " << date << " : ";
@@ -205,19 +201,16 @@ void check_int_key_int_value(py::dict &d) {
   d[std::to_string(3).c_str()] = 5;
 }
 
-void check_list_to_set(std::vector<std::string> &sids) {
-  for(auto & sid : sids) {
-    std::cout << sid.c_str() << " ";
-  }
-  std::cout << std::endl;
+void check_datetime_key(py::dict &d, std::vector<datetime> dts) {
+  std::cout << d.attr("get")(dts[0]) << std::endl;
+  std::cout << d.attr("get")(dts[0]).contains(2) << std::endl;
+  std::cout << d.attr("get")(dts[0]).contains(3) << std::endl;
+  std::cout << d.attr("get")(dts[1]) << std::endl;
+  std::cout << d.attr("get")(dts[1]).contains(2) << std::endl;
+  std::cout << d.attr("get")(dts[1]).contains(3) << std::endl;
 }
 
 PYBIND11_MODULE(core, m) {
-  m.def("add_two_array", &add_two_array);
-  m.def("show_datetime", &show_datetime);
-  m.def("show_dic_list", &show_dic_list);
-  m.def("check_dict_op", &check_dict_op);
-  m.def("check_list_to_set", &check_list_to_set);
-  m.def("check_int_key_int_value", &check_int_key_int_value);
+  m.def("check_datetime_key", &check_datetime_key);
   m.def("trade_on_sids", &trade_on_sids);
 }

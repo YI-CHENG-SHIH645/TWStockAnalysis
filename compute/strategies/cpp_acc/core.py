@@ -2,8 +2,8 @@ import numpy as np
 import datetime as dt
 
 
-def add_two_array(a: np.array, b: np.array, aux: float):
-    pass
+# def add_two_array(a: np.array, b: np.array, aux: float):
+#     pass
 
 
 def show_dic_list(dic_list: dict):

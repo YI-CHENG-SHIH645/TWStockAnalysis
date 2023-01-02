@@ -18,6 +18,7 @@ fi
 docker run -d --rm \
               --name profiling \
               -v "$PWD":/usr/src/twstock_analysis/compute \
+              -v "$PWD/../core":/usr/src/twstock_analysis/core \
               -w /usr/src/twstock_analysis/compute \
               twstock_analysis /bin/bash -c \
               " cd ../core/build &&

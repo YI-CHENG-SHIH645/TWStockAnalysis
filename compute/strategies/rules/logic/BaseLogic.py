@@ -60,6 +60,7 @@ class Logic:
         #     self.selected.update({date: selected})
         idx, col = self.select.values.nonzero()
         df = pd.DataFrame.from_records(zip(self.select.index[idx], self.select.columns[col]), columns=['date', 'sid'])
+        df['date'] = df['date'].apply(pd.to_datetime)
         self.selected = defaultdict(list, df.groupby('date', sort=False)['sid']
                                             .apply(list).to_dict())
 
