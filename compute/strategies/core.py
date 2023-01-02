@@ -153,12 +153,12 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
     else:
         start_date = records.loc[0, "last_check"]
 
-    last_date_signal = defaultdict(list)
-    logic = logic_cls(start_date, skip_select=skip_select)
-    last_date_signal['strategy_name'] = logic.strategy_name
+    logic = logic_cls(start_date, args.cpp, skip_select=skip_select)
     today = logic.c.index[-1]
-    last_date_signal['date'] = today.strftime("%Y-%m-%d")
     available_tid = 0 if max_tid is None else max_tid + 1
+
+    if args.cpp:
+        records = records.astype({'tid': int})
     sid2tid = dict(zip(records.sid, records.tid))
     records = records.set_index('tid')
     dic_records = defaultdict(dict, records.to_dict(orient='index'))
@@ -173,24 +173,59 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
         ma20 = ma20.iloc[logic.mature_day:].truncate(before=logic.start_date)
         ma20 = ma20.values.T
 
-    # TODO: parallelize this
-    _trade_on_sids(c.columns.values,
-                   dict(zip(o.columns, o.values.T)),
-                   dict(zip(c.columns, c.values.T)),
-                   dict(zip(c.columns, ma20)),
-                   pd.to_datetime(dates),
-                   logic.selected,
-                   logic.holding_days_th,
-                   dic_records,
-                   last_date_signal,
-                   sid2tid,
-                   pd.to_datetime(today),
-                   available_tid,
-                   logic.strategy_name,
-                   logic.trader_code)
+    last_date_signal = defaultdict(list)
+    if args.cpp:
+        # TODO: parallelize this
+        dic_records = \
+            trade_on_sids(c.columns.values,
+                          dict(zip(o.columns, o.values.T)),
+                          dict(zip(c.columns, c.values.T)),
+                          dict(zip(c.columns, ma20)),
+                          dates.astype(str),
+                          logic.selected,
+                          logic.holding_days_th,
+                          dic_records,
+                          last_date_signal,
+                          sid2tid,
+                          available_tid,
+                          logic.strategy_name,
+                          logic.trader_code)
+    else:
+        _trade_on_sids(c.columns.values,
+                       dict(zip(o.columns, o.values.T)),
+                       dict(zip(c.columns, c.values.T)),
+                       dict(zip(c.columns, ma20)),
+                       pd.to_datetime(dates),
+                       logic.selected,
+                       logic.holding_days_th,
+                       dic_records,
+                       last_date_signal,
+                       sid2tid,
+                       pd.to_datetime(today),
+                       available_tid,
+                       logic.strategy_name,
+                       logic.trader_code)
+    last_date_signal['strategy_name'] = logic.strategy_name
+    last_date_signal['date'] = today.strftime("%Y-%m-%d")
 
     new_records = pd.DataFrame.from_dict(dic_records, orient='index') \
         .rename_axis('tid').reset_index()
+
+    if args.cpp:
+        new_records["last_check"] = new_records['last_check'].map({"today": today})
+        new_records = new_records.astype({
+            "holding_days": int,
+            "last_check": "datetime64[ns]",
+            "open_price": float,
+            "open_date": "datetime64[ns]",
+            "shares": float,
+            "close_date": "datetime64[ns]",
+            "close_price": float,
+            "pnl": float,
+            "tax": float,
+            "fee": float,
+        })
+
     with PsqlConnect() as (conn, cur):
         upsert(cur, 'trading_record', ['tid'], new_records.columns.tolist()[1:], new_records)
         conn.commit()

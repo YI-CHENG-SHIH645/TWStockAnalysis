@@ -42,6 +42,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--profiling_name", type=str, default="")
     parser.add_argument("--new_start", action="store_true")
+    parser.add_argument("--cpp", action="store_true")
     args_ = parser.parse_args()
     if args_.profiling_name:
         import os

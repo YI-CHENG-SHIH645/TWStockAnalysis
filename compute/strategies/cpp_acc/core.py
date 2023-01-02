@@ -20,7 +20,6 @@ def trade_on_sids(sids: np.ndarray,
                   dic_records: dict,
                   last_date_signal: dict,
                   sid2tid: dict,
-                  today: dt.datetime,
                   available_tid: int,
                   strategy_name: str,
                   trader_code: str):

@@ -22,7 +22,7 @@ sudo docker run -d --rm \
                       rm CMakeCache.txt;
                       cmake .. && make &&
                       cd ../../compute &&
-                      python -um strategies.run --new_start > output.txt 2>&1";
+                      python -um strategies.run --cpp --new_start > output.txt 2>&1";
 #                    " python -um data.crawler.run > output.txt 2>&1 &&
 
 ##                    python -um data.crawler.brokers >> output.txt 2>&1

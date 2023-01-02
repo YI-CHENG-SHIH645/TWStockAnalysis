@@ -23,10 +23,11 @@ class Logic:
     # how to use this information?  check ./BBandsLogic.py for example
     # after understanding the data structure, you can start to build ur own strategies
     # ********* note: remember to inherit this base class "Logic" *********
-    def __init__(self, start_date, skip_select=False):
+    def __init__(self, start_date, cpp: bool, skip_select=False):
         Logic.__prepare_base_data()
         self.close_start = start_date - dt.timedelta(days=self.mature_day * 2)
         self.start_date = start_date
+        self.cpp = cpp
 
         self.select, self.selected = None, None
         self._cal_indicators()
@@ -60,9 +61,14 @@ class Logic:
         #     self.selected.update({date: selected})
         idx, col = self.select.values.nonzero()
         df = pd.DataFrame.from_records(zip(self.select.index[idx], self.select.columns[col]), columns=['date', 'sid'])
-        df['date'] = pd.to_datetime(df['date'])
-        self.selected = defaultdict(list, df.groupby('date', sort=False)['sid']
-                                            .apply(list).to_dict())
+        if self.cpp:
+            df['date'] = df['date'].astype(str)
+            self.selected = defaultdict(list, df.groupby('date', sort=False)['sid']
+                                        .apply(set).to_dict())
+        else:
+            df['date'] = pd.to_datetime(df['date'])
+            self.selected = defaultdict(list, df.groupby('date', sort=False)['sid']
+                                                .apply(list).to_dict())
 
     def __get_data(self, tgt: str, align=True):
         """
