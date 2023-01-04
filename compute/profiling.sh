@@ -11,7 +11,7 @@ if docker ps --format "{{.Image}}" | grep -q profiling;  then
 fi
 if ! docker image ls --format "{{.Repository}}" | grep -q twstock_analysis; then
   cd ..
-  sudo docker build -t twstock_analysis -f compute/Dockerfile .
+  docker build -t twstock_analysis -f compute/Dockerfile .
   cd compute || exit
 fi
 

@@ -5,7 +5,7 @@ import pandas as pd
 from data.database.interface import create_table, PsqlConnect, \
     execute_sql, res_to_df, upsert
 from strategies.rules.logic import Logic
-from strategies.cpp_acc.core import trade_on_sids
+from strategies.cpp_acc.core import trade_on_sids_openmp
 
 
 def _get_pnl(open_price: float,
@@ -176,20 +176,35 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
     last_date_signal = defaultdict(list)
     if args.cpp:
         # TODO: parallelize this
+        # dic_records = \
+        #     trade_on_sids(c.columns.values,
+        #                   dict(zip(o.columns, o.values.T)),
+        #                   dict(zip(c.columns, c.values.T)),
+        #                   dict(zip(c.columns, ma20)),
+        #                   dates.astype(str),
+        #                   logic.selected,
+        #                   logic.holding_days_th,
+        #                   dic_records,
+        #                   last_date_signal,
+        #                   sid2tid,
+        #                   available_tid,
+        #                   logic.strategy_name,
+        #                   logic.trader_code)
         dic_records = \
-            trade_on_sids(c.columns.values,
-                          dict(zip(o.columns, o.values.T)),
-                          dict(zip(c.columns, c.values.T)),
-                          dict(zip(c.columns, ma20)),
-                          dates.astype(str),
-                          logic.selected,
-                          logic.holding_days_th,
-                          dic_records,
-                          last_date_signal,
-                          sid2tid,
-                          available_tid,
-                          logic.strategy_name,
-                          logic.trader_code)
+            trade_on_sids_openmp(c.columns.values,
+                                 dict(zip(o.columns, o.values.T)),
+                                 dict(zip(c.columns, c.values.T)),
+                                 dict(zip(c.columns, ma20)),
+                                 dates.astype(str),
+                                 logic.selected,
+                                 logic.holding_days_th,
+                                 dic_records,
+                                 last_date_signal,
+                                 sid2tid,
+                                 available_tid,
+                                 logic.strategy_name,
+                                 logic.trader_code)
+        print(len(dic_records))
     else:
         _trade_on_sids(c.columns.values,
                        dict(zip(o.columns, o.values.T)),
