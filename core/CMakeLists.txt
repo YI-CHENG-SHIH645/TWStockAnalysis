@@ -1,26 +1,38 @@
 cmake_minimum_required(VERSION 3.18)
 project(core)
-
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../../compute/strategies/cpp_acc)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+find_package(pybind11 CONFIG REQUIRED)
+find_package(GTest REQUIRED)
+list(APPEND third_party
+    pybind11::module
+    OpenMP::OpenMP_CXX
+)
 
-if(APPLE)
-    LINK_DIRECTORIES("/opt/homebrew/opt/libomp/lib")
-    include_directories("/opt/homebrew/opt/libomp/include")
-else()
+if (APPLE)
+    # Require CMake 3.16+ on Mac OSX, as previous versions of CMake had trouble locating
+    # OpenMP on Mac. See https://github.com/dmlc/xgboost/pull/5146#issuecomment-568312706
+    cmake_minimum_required(VERSION 3.16)
+    find_package(OpenMP)
+    if (NOT OpenMP_FOUND)
+        # Try again with extra path info; required for libomp 15+ from Homebrew
+        execute_process(COMMAND brew --prefix libomp
+          OUTPUT_VARIABLE HOMEBREW_LIBOMP_PREFIX
+          OUTPUT_STRIP_TRAILING_WHITESPACE)
+        #    set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
+        #    set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
+        set(OpenMP_C_FLAGS
+          "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include")
+        set(OpenMP_CXX_FLAGS
+          "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include")
+        set(OpenMP_C_LIB_NAMES omp)
+        set(OpenMP_CXX_LIB_NAMES omp)
+        set(OpenMP_omp_LIBRARY ${HOMEBREW_LIBOMP_PREFIX}/lib/libomp.dylib)
+        find_package(OpenMP REQUIRED)
+    endif ()
+else ()
     find_package(OpenMP REQUIRED)
-endif()
-
-
-add_subdirectory(extern/pybind11)
-#add_subdirectory(extern/pybind11/tests)
-include_directories(extern/pybind11/include)
-
-pybind11_add_module(core main.cpp)
-if (NOT APPLE)
-    target_link_libraries(core PUBLIC OpenMP::OpenMP_CXX)
 endif ()
+
+
+add_subdirectory(src)

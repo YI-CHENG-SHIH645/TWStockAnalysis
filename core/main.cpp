@@ -336,306 +336,52 @@ void trade_omp(std::map<int, std::map<std::string, std::string>> &dic_records,
 
 // TODO: parallelize this
 std::map<int, std::map<std::string, std::string>> trade_on_sids(
-       std::vector<std::string> sids,
-       std::map<std::string, std::vector<float>> o,
-       std::map<std::string, std::vector<float>> c,
-       std::map<std::string, std::vector<float>> ma20,
-       std::vector<std::string> dates,
-       std::map<std::string, std::set<std::string>> selected,
-       int holding_days_th,
-       std::map<int, std::map<std::string, std::string>> dic_records,
-       std::map<std::string, std::vector<std::string>> last_date_signal,
-       std::map<std::string, int> sid2tid,
-       int available_tid,
-       std::string strategy_name,
-       std::string trader_code) {
- for(std::vector<std::string>::iterator it=sids.begin(); it<sids.end(); ++it) {
-   int tid;
-   std::map<std::string, std::string> r;
-   if(!sid2tid.count(*it)) {
-     r = {
-       {"sid", *it},
-       {"strategy_name", strategy_name},
-       {"trader_code", trader_code},
-       {"holding_days", "0"},
-       {"last_check", "today"},
-       {"open_price", "NAN"}
-     };
-     tid = available_tid;
-     available_tid += 1;
-     dic_records[tid] = r;
-   } else {
-     tid = sid2tid[*it];
-     dic_records[tid]["last_check"] = "today";
-     r = dic_records[sid2tid[*it]];
-   }
+        std::vector<std::string> sids,
+        std::map<std::string, std::vector<float>> o,
+        std::map<std::string, std::vector<float>> c,
+        std::map<std::string, std::vector<float>> ma20,
+        std::vector<std::string> dates,
+        std::map<std::string, std::set<std::string>> selected,
+        int holding_days_th,
+        std::map<int, std::map<std::string, std::string>> dic_records,
+        std::map<std::string, std::vector<std::string>> last_date_signal,
+        std::map<std::string, int> sid2tid,
+        int available_tid,
+        std::string strategy_name,
+        std::string trader_code) {
+  for(auto it=sids.begin(); it<sids.end(); ++it) {
+    int tid;
+    std::map<std::string, std::string> r;
+    if(!sid2tid.count(*it)) {
+      r = {
+        {"sid", *it},
+        {"strategy_name", strategy_name},
+        {"trader_code", trader_code},
+        {"holding_days", "0"},
+        {"last_check", "today"},
+        {"open_price", "NAN"}
+      };
+      tid = available_tid;
+      available_tid += 1;
+      dic_records[tid] = r;
+    } else {
+      tid = sid2tid[*it];
+      dic_records[tid]["last_check"] = "today";
+      r = dic_records[sid2tid[*it]];
+    }
 
-   float open_price = std::stof(r["open_price"]);
-   int holding_days = std::stoi(r["holding_days"]);
-   trade(dic_records, tid, *it,
-         open_price, holding_days, holding_days_th,
-         last_date_signal, available_tid,
-         o[*it], c[*it], ma20[*it], dates,
-         selected, strategy_name, trader_code);
- }
+    float open_price = std::stof(r["open_price"]);
+    int holding_days = std::stoi(r["holding_days"]);
+    trade(dic_records, tid, *it,
+          open_price, holding_days, holding_days_th,
+          last_date_signal, available_tid,
+          o[*it], c[*it], ma20[*it], dates,
+          selected, strategy_name, trader_code);
+  }
 
  return dic_records;
 }
 
-
-typedef struct thread_arg{
-    int id;
-    std::vector<std::string> *sids;
-    std::map<std::string, std::vector<float>> *o;
-    std::map<std::string, std::vector<float>> *c;
-    std::map<std::string, std::vector<float>> *ma20;
-    std::vector<std::string> *dates;
-    std::map<std::string, std::set<std::string>> *selected;
-    int *holding_days_th;
-    std::map<int, std::map<std::string, std::string>> *dic_records;
-    std::map<std::string, std::vector<std::string>> *last_date_signal;
-    std::map<std::string, int> *sid2tid;
-    int *available_tid;
-    std::string *strategy_name;
-    std::string *trader_code;
-}thread_arg;
-
-std::map<int, std::map<std::string, std::string>> trade_on_sids_pthread(
-        std::vector<std::string> sids,
-        std::map<std::string, std::vector<float>> o,
-        std::map<std::string, std::vector<float>> c,
-        std::map<std::string, std::vector<float>> ma20,
-        std::vector<std::string> dates,
-        std::map<std::string, std::set<std::string>> selected,
-        int holding_days_th,
-        std::map<int, std::map<std::string, std::string>> dic_records,
-        std::map<std::string, std::vector<std::string>> last_date_signal,
-        std::map<std::string, int> sid2tid,
-        int available_tid,
-        std::string strategy_name,
-        std::string trader_code) {
-
-//  Create the thread
-    pthread_t* threads;
-    threads = (pthread_t*)malloc(THREAD_NUM * sizeof(pthread_t));
-
-//  InitMutex
-    pthread_mutex_init(&mutex, NULL);
-    pthread_mutex_init(&mutex2, NULL);
-
-
-//  Create thread arguments
-    thread_arg th_arg[THREAD_NUM];
-
-//  Create threads
-    for(int i = 0; i < THREAD_NUM; i++)
-    {
-        th_arg[i].id = i;
-        th_arg[i].sids = &sids;//****
-        th_arg[i].o = &o;
-        th_arg[i].c = &c;
-        th_arg[i].ma20 = &ma20;
-        th_arg[i].dates = &dates;
-        th_arg[i].selected = &selected;
-        th_arg[i].holding_days_th = &holding_days_th;
-        th_arg[i].dic_records = &dic_records;
-        th_arg[i].last_date_signal = &last_date_signal;
-        th_arg[i].sid2tid = &sid2tid;
-        th_arg[i].available_tid = &available_tid;
-        th_arg[i].strategy_name = &strategy_name;
-        th_arg[i].trader_code = &trader_code;
-        pthread_create(&(threads[i]), NULL, thread_func, (void *)&th_arg[i]);
-    }
-
-//  wait for threads to complete their missions
-    for(int i = 0; i < THREAD_NUM; i++)
-        pthread_join(threads[i], NULL);
-    
-    //  destroy mutex
-    pthread_mutex_destroy(&mutex);
-    pthread_mutex_destroy(&mutex2);
-
-
-    free(threads);
-
-    return dic_records;
-
-}
-
-std::map<int, std::map<std::string, std::string>> trade_on_sids_pthread2(
-        std::vector<std::string> sids,
-        std::map<std::string, std::vector<float>> o,
-        std::map<std::string, std::vector<float>> c,
-        std::map<std::string, std::vector<float>> ma20,
-        std::vector<std::string> dates,
-        std::map<std::string, std::set<std::string>> selected,
-        int holding_days_th,
-        std::map<int, std::map<std::string, std::string>> dic_records,
-        std::map<std::string, std::vector<std::string>> last_date_signal,
-        std::map<std::string, int> sid2tid,
-        int available_tid,
-        std::string strategy_name,
-        std::string trader_code) {
-
-//  Create the thread
-    pthread_t* threads;
-    threads = (pthread_t*)malloc(THREAD_NUM * sizeof(pthread_t));
-
-//  InitMutex
-    pthread_mutex_init(&mutex, NULL);
-    pthread_mutex_init(&mutex2, NULL);
-
-
-//  Create thread arguments
-    thread_arg th_arg[THREAD_NUM];
-
-//  Create threads
-    for(int i = 0; i < THREAD_NUM; i++)
-    {
-        th_arg[i].id = i;
-        th_arg[i].sids = &sids;//****
-        th_arg[i].o = &o;
-        th_arg[i].c = &c;
-        th_arg[i].ma20 = &ma20;
-        th_arg[i].dates = &dates;
-        th_arg[i].selected = &selected;
-        th_arg[i].holding_days_th = &holding_days_th;
-        th_arg[i].dic_records = &dic_records;
-        th_arg[i].last_date_signal = &last_date_signal;
-        th_arg[i].sid2tid = &sid2tid;
-        th_arg[i].available_tid = &available_tid;
-        th_arg[i].strategy_name = &strategy_name;
-        th_arg[i].trader_code = &trader_code;
-        pthread_create(&(threads[i]), NULL, thread_func2, (void *)&th_arg[i]);
-    }
-
-//  wait for threads to complete their missions
-    for(int i = 0; i < THREAD_NUM; i++)
-        pthread_join(threads[i], NULL);
-    
-    //  destroy mutex
-    pthread_mutex_destroy(&mutex);
-    pthread_mutex_destroy(&mutex2);
-
-
-    free(threads);
-
-    return dic_records;
-
-}
-
-void *thread_func(void *param) {
-
-  thread_arg t = *(thread_arg*)param;
-  int step = t.sids->size()/THREAD_NUM;
-  auto sid = &((*t.sids)[t.id*step]);
-  auto sid_end = sid + ((t.id == THREAD_NUM-1)? (step + t.sids->size()%THREAD_NUM) : step);
-  for(auto it=sid; it<sid_end; ++it)
-  {
-
-//    omp_get_thread_num();
-    int tid;
-    std::map<std::string, std::string> r;
-
-    if (auto search = t.sid2tid->find(*it); search == t.sid2tid->end()) {
-      r = {
-              {"sid",           *it},
-              {"strategy_name", *(t.strategy_name)},
-              {"trader_code",   *(t.trader_code)},
-              {"holding_days",  "0"},
-              {"last_check",    "today"},
-              {"open_price",    "NAN"},
-              {"open_date",     "NAN"},
-              {"close_price",   "NAN"},
-              {"close_date",    "NAN"},
-              {"holding_days",  "NAN"},
-              {"pnl",           "NAN"},
-              {"tax",           "NAN"},
-              {"fee",           "NAN"},
-              {"long_short",    "NAN"},
-              {"shares",        "NAN"}
-      };
-
-      tid = __sync_fetch_and_add(t.available_tid, 1);
-      pthread_mutex_lock(&mutex); // lock
-      t.dic_records->insert({tid, r});
-      pthread_mutex_unlock(&mutex); //Unlock
-    }
-    else {
-      tid = t.sid2tid->find(*it)->second;
-      t.dic_records->find(tid)->second.find("last_check")->second = "today";
-      r = t.dic_records->find(t.sid2tid->find(*it)->second)->second;
-    }
-
-    float open_price = std::stof(r.find("open_price")->second);
-    int holding_days = std::stoi(r.find("holding_days")->second);
-
-    // 為什麼這裡 assert 不會過？
-    assert(t.dic_records->find(tid) != t.dic_records->end());
-    trade_pthread(*(t.dic_records), tid, *it,
-              open_price, holding_days, *(t.holding_days_th),
-              *(t.last_date_signal), *(t.available_tid),
-              t.o->find(*it)->second, t.c->find(*it)->second, t.ma20->find(*it)->second,
-              *(t.dates),*(t.selected), *(t.strategy_name), *(t.trader_code));
-  }
-  pthread_exit(NULL);
-}
-
-void *thread_func2(void *param) {
-
-  thread_arg t = *(thread_arg*)param;
-  // auto sid = &((*t.sids)[t.id]);
-  auto sid = t.sids->begin() + t.id;
-  for(auto it=sid; it<t.sids->end(); it += THREAD_NUM)
-  {
-
-//    omp_get_thread_num();
-    int tid;
-    std::map<std::string, std::string> r;
-
-    if (auto search = t.sid2tid->find(*it); search == t.sid2tid->end()) {
-      r = {
-              {"sid",           *it},
-              {"strategy_name", *(t.strategy_name)},
-              {"trader_code",   *(t.trader_code)},
-              {"holding_days",  "0"},
-              {"last_check",    "today"},
-              {"open_price",    "NAN"},
-              {"open_date",     "NAN"},
-              {"close_price",   "NAN"},
-              {"close_date",    "NAN"},
-              {"holding_days",  "NAN"},
-              {"pnl",           "NAN"},
-              {"tax",           "NAN"},
-              {"fee",           "NAN"},
-              {"long_short",    "NAN"},
-              {"shares",        "NAN"}
-      };
-
-      tid = __sync_fetch_and_add(t.available_tid, 1);
-      pthread_mutex_lock(&mutex); // lock
-      t.dic_records->insert({tid, r});
-      pthread_mutex_unlock(&mutex); //Unlock
-    }
-    else {
-      tid = t.sid2tid->find(*it)->second;
-      t.dic_records->find(tid)->second.find("last_check")->second = "today";
-      r = t.dic_records->find(t.sid2tid->find(*it)->second)->second;
-    }
-
-    float open_price = std::stof(r.find("open_price")->second);
-    int holding_days = std::stoi(r.find("holding_days")->second);
-
-    // 為什麼這裡 assert 不會過？
-    assert(t.dic_records->find(tid) != t.dic_records->end());
-    trade_pthread(*(t.dic_records), tid, *it,
-              open_price, holding_days, *(t.holding_days_th),
-              *(t.last_date_signal), *(t.available_tid),
-              t.o->find(*it)->second, t.c->find(*it)->second, t.ma20->find(*it)->second,
-              *(t.dates),*(t.selected), *(t.strategy_name), *(t.trader_code));
-  }
-  pthread_exit(NULL);
-}
 
 std::map<int, std::map<std::string, std::string>> trade_on_sids_openmp(
     std::vector<std::string> sids, std::map<std::string, std::vector<float>> o,
@@ -648,7 +394,6 @@ std::map<int, std::map<std::string, std::string>> trade_on_sids_openmp(
     std::map<std::string, int> sid2tid, int available_tid,
     std::string strategy_name, std::string trader_code) {
 
-  omp_set_num_threads(16);
   #pragma omp parallel for
   for(auto it=sids.begin(); it<sids.end(); ++it)
   {

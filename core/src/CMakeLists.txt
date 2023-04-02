@@ -1,2 +1,5 @@
-add_library(trade main.cpp trade.cpp trade.h)
-target_link_libraries(trade PUBLIC OpenMP::OpenMP_CXX pybind11::pybind11)
+file(GLOB CPPS *.cpp)
+file(GLOB HEADERS *.h)
+
+add_library(trading_op ${CPPS} ${HEADERS})
+target_link_libraries(trading_op ${third_party})
