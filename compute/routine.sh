@@ -10,25 +10,18 @@ if ! docker image ls --format "{{.Repository}}" | grep -q twstock_analysis; then
   cd compute || exit
 fi
 
-docker run -d --rm \
+docker run --rm \
               --name run_analysis \
               -v "$PWD":/usr/src/twstock_analysis/compute \
-              -v "$PWD/../core":/usr/src/twstock_analysis/core \
               -w /usr/src/twstock_analysis/compute \
               twstock_analysis /bin/bash -c \
-              " cd ../core/ &&
-                mkdir -p build &&
-                cd build &&
-                rm CMakeCache.txt;
-                cmake .. && make &&
-                cd ../../compute &&
-                python -um strategies.run --cpp --new_start > output.txt 2>&1";
+              "python -um strategies.run --cpp --new_start > output.txt 2>&1";
 #             " python -um data.crawler.run > output.txt 2>&1 &&
 
 ##              python -um data.crawler.brokers >> output.txt 2>&1
 
 docker wait run_analysis
-mkdir -p ../backend_api/public/pictures
-mv "$PWD"/strategies/info.json "$PWD"/../backend_api/public
-mv "$PWD"/strategies/*.png "$PWD"/../backend_api/public/pictures
+mkdir -p ../server/public/pictures
+mv "$PWD"/strategies/info.json "$PWD"/../server/public
+mv "$PWD"/strategies/*.png "$PWD"/../server/public/pictures
 # pg_dump --no-owner financial_data > financial_data.dump

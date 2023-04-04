@@ -63,12 +63,22 @@ class Logic:
         df = pd.DataFrame.from_records(zip(self.select.index[idx], self.select.columns[col]), columns=['date', 'sid'])
         if self.cpp:
             df['date'] = df['date'].astype(str)
-            self.selected = defaultdict(list, df.groupby('date', sort=False)['sid']
-                                        .apply(set).to_dict())
+            self.selected = defaultdict(set, (
+                df
+                .groupby('date', sort=False)
+                ['sid']
+                .apply(set)
+                .to_dict()
+            ))
         else:
             df['date'] = pd.to_datetime(df['date'])
-            self.selected = defaultdict(list, df.groupby('date', sort=False)['sid']
-                                                .apply(list).to_dict())
+            self.selected = defaultdict(set, (
+                df
+                .groupby('date', sort=False)
+                ['sid']
+                .apply(set)
+                .to_dict()
+            ))
 
     def __get_data(self, tgt: str, align=True):
         """

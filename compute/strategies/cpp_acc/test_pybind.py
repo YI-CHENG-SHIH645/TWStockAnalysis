@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict, Set
 import numpy as np
-from strategies.cpp_acc.core import cpp_func
 
 
 @dataclass
@@ -33,4 +32,3 @@ if __name__ == '__main__':
         "9958": np.array([125, 114, 178]),
     }
     data_obj = DataCollection(int_list, str_list, int2str, str2dict, str2arr)
-    cpp_func(data_obj)

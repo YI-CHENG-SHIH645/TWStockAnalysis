@@ -5,8 +5,20 @@ import pandas as pd
 from data.database.interface import create_table, PsqlConnect, \
     execute_sql, res_to_df, upsert
 from strategies.rules.logic import Logic
-from strategies.cpp_acc.core import trade_on_sids, trade_on_sids_openmp, \
-    trade_on_sids_pthread, trade_on_sids_pthread2
+from trading_op import TradingInfo, PriceData, Trader
+
+record_dtypes = {
+    "holding_days": int,
+    "last_check": "datetime64[ns]",
+    "open_price": float,
+    "open_date": "datetime64[ns]",
+    "shares": float,
+    "close_date": "datetime64[ns]",
+    "close_price": float,
+    "pnl": float,
+    "tax": float,
+    "fee": float,
+}
 
 
 def _get_pnl(open_price: float,
@@ -175,97 +187,11 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
         ma20 = ma20.values.T
 
     last_date_signal = defaultdict(list)
-    if args.cpp:
-        # TODO: parallelize this
-        dic_records = \
-            trade_on_sids_pthread(c.columns.values,
-                          dict(zip(o.columns, o.values.T)),
-                          dict(zip(c.columns, c.values.T)),
-                          dict(zip(c.columns, ma20)),
-                          dates.astype(str),
-                          logic.selected,
-                          logic.holding_days_th,
-                          dic_records,
-                          last_date_signal,
-                          sid2tid,
-                          available_tid,
-                          logic.strategy_name,
-                          logic.trader_code)
-        print(len(dic_records))
-        dic_records2 = \
-            trade_on_sids_openmp(c.columns.values,
-                                 dict(zip(o.columns, o.values.T)),
-                                 dict(zip(c.columns, c.values.T)),
-                                 dict(zip(c.columns, ma20)),
-                                 dates.astype(str),
-                                 logic.selected,
-                                 logic.holding_days_th,
-                                 defaultdict(dict, records.to_dict(orient='index')),
-                                 defaultdict(list),
-                                 dict(zip(records.sid, records.reset_index().tid)),
-                                 available_tid,
-                                 logic.strategy_name,
-                                 logic.trader_code)
-        print(len(dic_records2))
-        # dic_records3 = \
-        #     trade_on_sids_pthread(c.columns.values,
-        #                          dict(zip(o.columns, o.values.T)),
-        #                          dict(zip(c.columns, c.values.T)),
-        #                          dict(zip(c.columns, ma20)),
-        #                          dates.astype(str),
-        #                          logic.selected,
-        #                          logic.holding_days_th,
-        #                          defaultdict(dict, records.to_dict(orient='index')),
-        #                          defaultdict(list),
-        #                          dict(zip(records.sid, records.reset_index().tid)),
-        #                          available_tid,
-        #                          logic.strategy_name,
-        #                          logic.trader_code)
-        # print(len(dic_records3))
-        # new_records = pd.DataFrame.from_dict(dic_records, orient='index') \
-        #     .rename_axis('tid').reset_index().astype({
-        #         "holding_days": int,
-        #         "last_check": "datetime64[ns]",
-        #         "open_price": float,
-        #         "open_date": "datetime64[ns]",
-        #         "shares": float,
-        #         "close_date": "datetime64[ns]",
-        #         "close_price": float,
-        #         "pnl": float,
-        #         "tax": float,
-        #         "fee": float,
-        #     })
-        # new_records2 = pd.DataFrame.from_dict(dic_records2, orient='index') \
-        #     .rename_axis('tid').reset_index().astype({
-        #         "holding_days": int,
-        #         "last_check": "datetime64[ns]",
-        #         "open_price": float,
-        #         "open_date": "datetime64[ns]",
-        #         "shares": float,
-        #         "close_date": "datetime64[ns]",
-        #         "close_price": float,
-        #         "pnl": float,
-        #         "tax": float,
-        #         "fee": float,
-        #     })
-        # new_records3 = pd.DataFrame.from_dict(dic_records3, orient='index') \
-        #     .rename_axis('tid').reset_index().astype({
-        #         "holding_days": int,
-        #         "last_check": "datetime64[ns]",
-        #         "open_price": float,
-        #         "open_date": "datetime64[ns]",
-        #         "shares": float,
-        #         "close_date": "datetime64[ns]",
-        #         "close_price": float,
-        #         "pnl": float,
-        #         "tax": float,
-        #         "fee": float,
-        #     })
+    last_date_signal['strategy_name'] = logic.strategy_name
+    last_date_signal['date'] = today.strftime("%Y-%m-%d")
 
-        # assert (pd.concat([new_records, new_records2, new_records3], axis=0)
-        #         [['sid', 'open_date', 'open_price', 'close_date', 'close_price']]
-        #         .value_counts() == 1).sum() == len(new_records) - 981
-    else:
+    if not args.cpp:
+        # -------------------- python serial --------------------
         _trade_on_sids(c.columns.values,
                        dict(zip(o.columns, o.values.T)),
                        dict(zip(c.columns, c.values.T)),
@@ -280,26 +206,42 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
                        available_tid,
                        logic.strategy_name,
                        logic.trader_code)
-    last_date_signal['strategy_name'] = logic.strategy_name
-    last_date_signal['date'] = today.strftime("%Y-%m-%d")
+        new_records = pd.DataFrame.from_dict(dic_records, orient='index').rename_axis('tid').reset_index()
+        # -------------------- python serial --------------------
 
-    new_records = pd.DataFrame.from_dict(dic_records, orient='index') \
-        .rename_axis('tid').reset_index()
+    else:
+        # -------------------- c++ serial --------------------
+        info = TradingInfo(logic.strategy_name,
+                           logic.trader_code,
+                           logic.holding_days_th,
+                           available_tid,
+                           dict(logic.selected))
+        prices = PriceData(c.columns.values,
+                           dates.astype(str),
+                           dict(zip(o.columns, o.values.T)),
+                           dict(zip(c.columns, c.values.T)),
+                           dict(zip(c.columns, ma20)))
+        trader = Trader(info,
+                        prices,
+                        sid2tid,
+                        defaultdict(dict, records.to_dict(orient='index')),
+                        defaultdict(list))
+        dic_records2 = trader.trade_serial()
+        new_records = (
+            pd.DataFrame.from_dict(dic_records2, orient='index')
+            .rename_axis('tid')
+            .reset_index()
+            .astype(record_dtypes)
+        )
+        # -------------------- c++ serial --------------------
 
-    if args.cpp:
-        new_records["last_check"] = new_records['last_check'].map({"today": today})
-        new_records = new_records.astype({
-            "holding_days": int,
-            "last_check": "datetime64[ns]",
-            "open_price": float,
-            "open_date": "datetime64[ns]",
-            "shares": float,
-            "close_date": "datetime64[ns]",
-            "close_price": float,
-            "pnl": float,
-            "tax": float,
-            "fee": float,
-        })
+    # -------------------- checking same result --------------------
+    # assert (
+    #     pd.concat([new_records, new_records2], axis=0)
+    #     [['sid', 'open_date', 'open_price', 'close_date', 'close_price']]
+    #     .value_counts() == 1
+    # ).sum() == len(new_records) - 981
+    # -------------------- checking same result --------------------
 
     with PsqlConnect() as (conn, cur):
         upsert(cur, 'trading_record', ['tid'], new_records.columns.tolist()[1:], new_records)
@@ -309,4 +251,5 @@ def strategy(logic_cls: Logic.__class__, args, start_date="2013-01-01", skip_sel
     last_date_signal['hold'].extend(holdings['sid'].values)
     last_date_signal['buy'].extend(logic.selected[logic.c.index[-1]])
     last_date_signal['sell'].extend([])
+
     return last_date_signal

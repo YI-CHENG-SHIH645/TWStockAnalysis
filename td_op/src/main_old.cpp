@@ -583,19 +583,20 @@ void *thread_func2(void *param) {
 }
 
 std::map<int, std::map<std::string, std::string>> trade_on_sids_openmp(
-    std::vector<std::string> & sids, std::map<std::string, std::vector<float>> & o,
-    std::map<std::string, std::vector<float>> & c,
-    std::map<std::string, std::vector<float>> & ma20,
-    std::vector<std::string> & dates,
-    std::map<std::string, std::set<std::string>> & selected, int holding_days_th,
+    std::vector<std::string> &sids,
+    std::map<std::string, std::vector<float>> &o,
+    std::map<std::string, std::vector<float>> &c,
+    std::map<std::string, std::vector<float>> &ma20,
+    std::vector<std::string> &dates,
+    std::map<std::string, std::set<std::string>> &selected, int holding_days_th,
     std::map<int, std::map<std::string, std::string>> dic_records,
-    std::map<std::string, std::vector<std::string>> & last_date_signal,
-    std::map<std::string, int> & sid2tid, int available_tid,
-    std::string & strategy_name, std::string & trader_code) {
+    std::map<std::string, std::vector<std::string>> &last_date_signal,
+    std::map<std::string, int> &sid2tid, int available_tid,
+    std::string &strategy_name, std::string &trader_code) {
 
-#pragma omp parallel for shared(dic_records, available_tid) firstprivate(sids,\
-sid2tid, strategy_name, trader_code, o, c, ma20, dates, selected, last_date_signal, \
- holding_days_th) default(none)
+#pragma omp parallel for shared(dic_records, available_tid)                    \
+    firstprivate(sids, sid2tid, strategy_name, trader_code, o, c, ma20, dates, \
+                 selected, last_date_signal, holding_days_th) default(none)
   for (auto it = sids.begin(); it < sids.end(); ++it) {
     //    std::cout << "Hello from thread " << omp_get_thread_num() << " : " <<
     //    *it << std::endl; omp_get_thread_num();
@@ -633,11 +634,12 @@ sid2tid, strategy_name, trader_code, o, c, ma20, dates, selected, last_date_sign
 
     // 為什麼這裡 assert 不會過？
     if (dic_records.find(tid) == dic_records.end()) {
-//      for (int i = 0; i < 100; ++i) {
-//        std::cout << "Outside thread : " << omp_get_thread_num()
-//                  << ", deal with " << *it << ", finding tid fail: " << tid
-//                  << ", available: " << available_tid << std::endl;
-//      }
+      //      for (int i = 0; i < 100; ++i) {
+      //        std::cout << "Outside thread : " << omp_get_thread_num()
+      //                  << ", deal with " << *it << ", finding tid fail: " <<
+      //                  tid
+      //                  << ", available: " << available_tid << std::endl;
+      //      }
     }
     trade_omp(dic_records, tid, *it, open_price, holding_days, holding_days_th,
               last_date_signal, available_tid, o.find(*it)->second,

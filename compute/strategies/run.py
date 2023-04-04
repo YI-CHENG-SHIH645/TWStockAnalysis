@@ -35,6 +35,7 @@ def main(args):
         import json
         f = open('strategies/info.json', 'w', encoding='utf-8')
         json.dump(summary, f, indent=4)
+        f.close()
 
 
 if __name__ == '__main__':

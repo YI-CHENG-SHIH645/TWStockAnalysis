@@ -4,10 +4,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(pybind11 CONFIG REQUIRED)
 find_package(GTest REQUIRED)
-list(APPEND third_party
-    pybind11::module
-    OpenMP::OpenMP_CXX
-)
 
 if (APPLE)
     # Require CMake 3.16+ on Mac OSX, as previous versions of CMake had trouble locating
@@ -34,5 +30,10 @@ else ()
     find_package(OpenMP REQUIRED)
 endif ()
 
+list(APPEND third_party
+    pybind11::module
+    OpenMP::OpenMP_CXX
+)
 
 add_subdirectory(src)
+add_subdirectory(tests)
